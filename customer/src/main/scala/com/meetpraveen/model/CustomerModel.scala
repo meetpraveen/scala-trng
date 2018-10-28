@@ -14,6 +14,9 @@ trait Identifiable {
     id
   }
 }
+//Case classes for our domain object.
+//EXPLORE: Constructor args can be made as vars, why is not advisable?
+//NOTICE: How we can specify default values to some fields.
 final case class Customer(id: UUID = UUID.randomUUID(), name: String = "test", age: Int = 1, countryOfResidence: String = "India") extends Identifiable
 final case class Customers(customers: Seq[Customer])
 //#customer-case-classes

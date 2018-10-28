@@ -38,6 +38,7 @@ trait CustomerRoutes extends JsonSupport {
   implicit lazy val timeout = Timeout(15.seconds) // usually we'd obtain the timeout from the system's configuration
 
   implicit val exceptionHandler = ExceptionHandler {
+    //TODO: Do more fine grained error handling
     case ex: Throwable => {
       ex.printStackTrace
       complete(StatusCodes.BadRequest, ex.getMessage)
@@ -48,31 +49,39 @@ trait CustomerRoutes extends JsonSupport {
   //#customers-get-delete
   lazy val customerRoutes: Route =
     pathPrefix("customers") {
-      concat(
         //#customers-get-delete
         pathEnd {
-          concat(
             get {
               val customers = (customerRegistryActor ? GetCustomers).mapTo[Try[Customers]]
               complete(customers)
-            },
+            } ~
             post {
               entity(as[Customer]) { customer =>
                 val customerCreated =
+               //TODO: Wire this to CreateCustomerRequest
                   (customerRegistryActor ? CreateCustomer(customer)).mapTo[Try[Customer]]
                 onSuccess(customerCreated) { performed =>
                   log.info("Created customer [{}]", performed)
                   complete(StatusCodes.Created, performed)
                 }
               }
-            })
-        },
+            }
+        } ~
         //#customers-get-post
         //#customers-get-delete
         path(JavaUUID) { id =>
-          concat(
+            //TODO: Create a new route for POST where id is passed by users. You can use the CreateCustomer(customer)
+            //message of the actor to fulfil that request
+            //post {
+              // TODO: capture the request body 'entity' as 'Customer' 
+              //entity(...) { customer =>
+                //TODO: Send CreateCustomer(customer) to CustomerRegistryActor 
+                //complete(StatusCodes.Created, "")
+              //}
+            //} ~
             get {
               //#retrieve-customer-info
+              //EXPLORE: Notice the use of Option to represent a field which can be there or absent
               val maybecustomer: Future[Try[Option[Customer]]] =
                 (customerRegistryActor ? GetCustomer(id)).mapTo[Try[Option[Customer]]]
               implicit val ec: ExecutionContext = system.dispatcher
@@ -84,7 +93,7 @@ trait CustomerRoutes extends JsonSupport {
                 complete(maybecustomer)
               }
               //#retrieve-customer-info
-            },
+            } ~
             delete {
               //#customers-delete-logic
               val customerDeleted: Future[Unit] =
@@ -94,8 +103,8 @@ trait CustomerRoutes extends JsonSupport {
                 complete(StatusCodes.OK, "")
               }
               //#customers-delete-logic
-            })
-        })
+            }
+        }
       //#customers-get-delete
     }
   //#all-routes

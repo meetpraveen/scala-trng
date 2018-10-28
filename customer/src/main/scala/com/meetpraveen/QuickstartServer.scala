@@ -34,6 +34,7 @@ object QuickstartServer extends App with CustomerRoutes {
 
   //#main-class
   // from the customerRoutes trait
+  //EXPLORE: Readup the dsl language for akka http - https://doc.akka.io/docs/akka-http/current/routing-dsl/index.html
   lazy val routes: Route = handleExceptions(exceptionHandler) { customerRoutes }
   //#main-class
 
