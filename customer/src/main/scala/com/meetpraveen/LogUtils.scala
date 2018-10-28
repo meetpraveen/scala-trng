@@ -9,7 +9,6 @@ object LogUtils {
   implicit class LogEnhancer[T](val logStr: StringContext) extends AnyVal {
     //TODO: [Bonus Points] Add support for all types. Currently the args are limited to string types
     def log(args: String*)(implicit log: Logger) = {
-      logStr.raw(args: _*)
       log.debug(logStr.raw(args: _*))
     }
   }
