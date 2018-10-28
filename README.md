@@ -1,3 +1,5 @@
+_Creating docker image and running inside a container is not yet covered, its coming soon... watch this space_ 
+
 # A guide to create a simple scala microservice
 The aim of this excercise is to get a headstart on how to create a simple scala microservice. We are going to use the following stack/tools -
 
@@ -48,7 +50,7 @@ DELETE /customers/v1/api/ HTTP 1.1
 Sample response - 200 OK
 ``` 
 
-# Create project
+# Create project **_skip if you are cloning this repo_
 
 1. We will use sbt as our build and package tooling. There are a number of templates one can start from, some of these are maintained as giter8 templates and are good starting point.
 
@@ -59,7 +61,9 @@ Sample response - 200 OK
 	`sbt new`
 2. Now that we have the project please jump on to the code example in the customer folder. It has the necessary documentation to complete the implementation. For the impatient refer to the branch 'solution' for the concrete implementation.
 
-3. For importing the project into IDEs, `sbt eclipse` when you are inside the customers folder does the trick. You can then import it as existing project in eclipse.
+# Importing the project into IDEs 
+
+`sbt eclipse` when you are inside the `customers` folder does the trick. You can then import it as existing project in eclipse.
 
 # How to go about it
 
