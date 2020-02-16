@@ -2,13 +2,13 @@ package com.meetpraveen.route
 
 // Exposes mdc aware send and ask to actor
 import akka.MDCAwareActor.Implicits._
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ ActorRef, ActorSystem }
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.directives.MethodDirectives.{delete, get, post}
+import akka.http.scaladsl.server.directives.MethodDirectives.{ delete, get, post }
 import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
-import akka.http.scaladsl.server.{ExceptionHandler, Route}
+import akka.http.scaladsl.server.{ ExceptionHandler, Route }
 import akka.util.Timeout
 import com.meetpraveen.actor.CustomerRegistryActor._
 import com.meetpraveen.directives.TrackingDirectives
@@ -53,55 +53,55 @@ trait CustomerRoutes extends JsonSupport with TrackingDirectives {
   //#customers-get-delete
   lazy val customerRoutes: Route =
     // Extract correlation id from header and pass it to MDC, finally send it back as response header
-//    (extractCorrelationId & repondWithCorrelationHeader) {
-      pathPrefix("customers") {
+    //    (extractCorrelationId & repondWithCorrelationHeader) {
+    pathPrefix("customers") {
+      //#customers-get-delete
+      pathEndOrSingleSlash {
+        get {
+          val xml: Elem = <start>hello</start>
+          val customers = (customerRegistryActor ?? GetCustomers).mapTo[Try[Customers]].withLogAndTags(Map("name" -> xml))("Route: Get customers")
+          complete(customers)
+        } ~
+          post {
+            entity(as[Customer]) { customer =>
+              val customerCreated =
+                (customerRegistryActor ?? CreateCustomer(customer)).mapTo[Try[Customer]].withLogging("Route Created customer")
+              onSuccess(customerCreated) { performed =>
+                complete(StatusCodes.Created, performed)
+              }
+            }
+          }
+      } ~
+        //#customers-get-post
         //#customers-get-delete
-        pathEndOrSingleSlash {
+        path(JavaUUID) { id =>
           get {
-            val xml: Elem = <start>hello</start>
-            val customers = (customerRegistryActor ?? GetCustomers).mapTo[Try[Customers]].withLogAndTags(Map("name" -> xml))("Route: Get customers")
-            complete(customers)
-          } ~
-            post {
-              entity(as[Customer]) { customer =>
-                val customerCreated =
-                  (customerRegistryActor ?? CreateCustomer(customer)).mapTo[Try[Customer]].withLogging("Route Created customer")
-                onSuccess(customerCreated) { performed =>
-                  complete(StatusCodes.Created, performed)
+            //#retrieve-customer-info
+            val context = Kamon.currentContext().withEntry(Context.key("poison", "undefined"), "available")
+            Kamon.runWithContext(context) {
+              val maybecustomer =
+                (customerRegistryActor ?? GetCustomer(id)).mapTo[Try[Option[Customer]]].withLogAndEntries(Map(Context.key("mySpecialContext", "get/cusotmer/:id") -> "available"))("Route Get customer(id)")
+              onSuccess(maybecustomer) { customer =>
+                rejectEmptyResponse {
+                  complete(maybecustomer)
                 }
               }
             }
-        } ~
-          //#customers-get-post
-          //#customers-get-delete
-          path(JavaUUID) { id =>
-            get {
-              //#retrieve-customer-info
-              val context = Kamon.currentContext().withEntry(Context.key("poison", "undefined"), "available")
-              Kamon.runWithContext(context) {
-                val maybecustomer =
-                  (customerRegistryActor ?? GetCustomer(id)).mapTo[Try[Option[Customer]]].withLogAndEntries(Map(Context.key("mySpecialContext", "get/cusotmer/:id") -> "available"))("Route Get customer(id)")
-                onSuccess(maybecustomer) { customer =>
-                  rejectEmptyResponse {
-                    complete(maybecustomer)
-                  }
-                }
+            //#retrieve-customer-info
+          } ~
+            delete {
+              //#customers-delete-logic
+              val customerDeleted =
+                (customerRegistryActor ?? DeleteCustomer(id)).mapTo[Try[Unit]]
+              onSuccess(customerDeleted) { performed =>
+                info"Deleted customer [${id.toString}]"
+                complete(StatusCodes.OK, "Deleted")
               }
-              //#retrieve-customer-info
-            } ~
-              delete {
-                //#customers-delete-logic
-                val customerDeleted =
-                  (customerRegistryActor ?? DeleteCustomer(id)).mapTo[Try[Unit]]
-                onSuccess(customerDeleted) { performed =>
-                  info"Deleted customer [${id.toString}]"
-                  complete(StatusCodes.OK, "Deleted")
-                }
-                //#customers-delete-logic
-              }
-          }
-        //#customers-get-delete
-      }
-    //}
+              //#customers-delete-logic
+            }
+        }
+      //#customers-get-delete
+    }
+  //}
   //#all-routes
 }

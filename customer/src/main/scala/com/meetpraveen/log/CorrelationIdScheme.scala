@@ -3,19 +3,19 @@ package com.meetpraveen.log
 import java.util.UUID
 
 import kamon.Kamon
-import kamon.trace.{Identifier, SpanBuilder, Tracer}
+import kamon.trace.{ Identifier, SpanBuilder, Tracer }
 import kamon.context.Context
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 class CorrelationIdScheme extends Identifier.Scheme(UUIDIdentifier, Identifier.Factory.EightBytesIdentifier)
 
 object CorrelationIdTracer {
   val Scheme = new CorrelationIdScheme
   val CorrId = "correlationId"
-  val CorrContextId = Context.key(CorrId, "")
+  val CorrContextId: Context.Key[String] = Context.key(CorrId, "")
   val CorrelationIdHeader = "X-Correlation-Id"
-  val Empty = UUIDIdentifier.generate()
+  val Empty: Identifier = UUIDIdentifier.generate()
 }
 
 object UUIDIdentifier extends Identifier.Factory {

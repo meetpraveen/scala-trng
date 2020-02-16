@@ -29,5 +29,6 @@ lazy val root = (project in file("."))
       "org.cassandraunit"       % "cassandra-unit"       % "3.1.3.2",
       "com.lightbend.akka"      %% "akka-stream-alpakka-cassandra" % "1.0-M1"
     ),
-    javaAgents += "org.aspectj" % "aspectjweaver" % "1.9.5"
+    javaAgents += "org.aspectj" % "aspectjweaver" % "1.9.5",
+    scalacOptions ++= Seq("-deprecation", "-feature")
   )
